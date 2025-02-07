@@ -1,0 +1,32 @@
+name: Deploy WebApp
+
+on:
+  # manual trigger
+  workflow_dispatch:
+
+  # push to main branch trigger
+  # push:
+  #   branches: [main]
+  #   paths:
+  #     # all files in kubernetes directory
+  #     - "kubernetes/**"
+  # repository_dispatch:
+  #   types: [deploy-webapp]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Authenticate to GCP
+        uses: google-github-actions/auth@v1
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Deploy to Kubernetes
+        run: |
+          gcloud container clusters get-credentials client-x-cluster --region us-central1
+          kubectl apply -f kubernetes/webapp-deployment.yaml
+          kubectl rollout restart deployment/webapp
